@@ -59,7 +59,8 @@ const StyledButton = styled(Button)({
   },
 });
 
-const ServerStatus = () => {
+const ServerStatus = ({result}) => {
+  
   return (
     <Container>
       <Typography variant="h6" gutterBottom>
@@ -131,26 +132,29 @@ const ServerStatus = () => {
         <StatusItem>
           <Typography variant="subtitle1">Smtps</Typography>
           <Typography variant="h4" className="smtps">
-            99
+            {result.totalSenders}
           </Typography>
         </StatusItem>
         <StatusItem>
           <Typography variant="subtitle1">Failed</Typography>
           <Typography variant="h4" className="failed">
-            1
+          {result.senderFailures}
+
           </Typography>
           <Typography>Get log</Typography>
         </StatusItem>
         <StatusItem>
           <Typography variant="subtitle1">Sent</Typography>
           <Typography variant="h4" className="sent">
-            9
+          {result.totalReceivers}
+
           </Typography>
         </StatusItem>
         <StatusItem>
           <Typography variant="subtitle1">Failed</Typography>
           <Typography variant="h4" className="failed">
-            1
+          {result.receiverFailures}
+
           </Typography>
           <Typography>Get log</Typography>
         </StatusItem>
@@ -189,7 +193,10 @@ const ServerStatus = () => {
               justifyContent: "center",
             }}
           >
-            <Typography variant="body1">1</Typography>
+            <Typography variant="body1">
+          {result.responseTime}
+
+            </Typography>
             <img
               src={Images.TImerIcon}
               alt="cart icon"

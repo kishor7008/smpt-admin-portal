@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Papa from "papaparse"; // Import PapaParse
 import {
   Box,
@@ -9,12 +9,11 @@ import {
   TextField,
   InputAdornment,
   Chip,
-  unstable_composeClasses,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import TextEditor from "./TextEditor";
 import Images from "../assets/images";
-
+import { v4 as uuidv4 } from "uuid";
 // Container styles
 const Container = styled(Box)({
   display: "flex",
@@ -47,7 +46,7 @@ const RemoveButton = styled(Button)({
   },
 });
 
-const SmtpUI = () => {
+const SmtpUI = ({ setResult }) => {
   const [smtpReciver, setSmtpReciver] = useState([]);
   const [smtpSender, setSmtpSender] = useState([]);
   const [tags, setTags] = useState(["email", "name", "content", "c5"]);
@@ -61,18 +60,6 @@ const SmtpUI = () => {
   const [fileName, setFileName] = useState("");
   const [content, setContent] = useState("");
   const [htmlFile, setHtmlFile] = useState("");
-  const [emailPayload, setEmailPayload] = useState([]);
-  console.log({
-    smtpReciver,
-    smtpSender,
-    typeServices,
-    fileType,
-    senderName,
-    subject,
-    fileName,
-    content,
-    htmlFile,
-  });
   const StyledButton = styled(Button)({
     backgroundColor: "#1e90ff",
     color: "#fff",
@@ -80,47 +67,51 @@ const SmtpUI = () => {
     "&:hover": {
       backgroundColor: "#1c86ee",
     },
-    height:"10vh",
-    padding:"10px 20px",
-    width:"250px",
-    fontWeight:"bold",
-    fontSize:"19px",
+    height: "10vh",
+    padding: "10px 20px",
+    width: "250px",
+    fontWeight: "bold",
+    fontSize: "19px",
   });
   function renderTemplate(obj, htmlString) {
-    return htmlString.replace(/\{\{(\w+)\}\}/g, (match, key) => obj[key] || '');
+    return htmlString.replace(/\{\{(\w+)\}\}/g, (match, key) => obj[key] || "");
   }
-   useEffect(()=>{
-    let combined=[]
-    smtpSender.forEach(sender => {
-      smtpReciver.forEach(receiver => {
-          combined.push({
-              senderEmail: sender.email,
-              senderPassword: sender.pass,
-              receiverEmail: receiver.email,
-              senderName: renderTemplate(receiver,senderName),
-              receiverContent:renderTemplate(receiver,content),
-              receiverAttachememt:renderTemplate(receiver,htmlFile),
-              filename:renderTemplate(receiver,fileName),
-              fileType:fileType,
-          });
+  const handelSubmit = () => {
+    let combined = [];
+    smtpSender.forEach((sender) => {
+      smtpReciver.forEach((receiver) => {
+        combined.push({
+          senderEmail: sender.email,
+          senderPassword: sender.pass,
+          receiverEmail: receiver.email,
+          senderName: renderTemplate(receiver, senderName),
+          receiverContent: renderTemplate(receiver, content),
+          receiverAttachment: renderTemplate(receiver, htmlFile), // Corrected typo: "receiverAttachememt" to "receiverAttachment"
+          filename: renderTemplate(receiver, fileName),
+          fileType: fileType,
+          id: receiver.id,
+        });
       });
-      console.log(combined,"combined")
-  });
-   },[smtpReciver,smtpSender,senderName,content])
-  const handelRecipients = (event) => {
+    });
+    console.log(combined, "combined");
+  };
 
+  const handelRecipients = (event) => {
     const file = event.target.files[0];
     if (file) {
       Papa.parse(file, {
-        header: false, // We will manually map headers below
+        header: false, // Manually mapping headers
         skipEmptyLines: true,
         complete: (result) => {
           const formattedData = result.data.map((row) => {
-            // Create an object where keys are column indexes
-            return row.reduce((acc, value, index) => {
-              acc[`${tags[index]}`] = value; // Creates keys column1, column2, etc.
+            // Create an object where keys are from the tags array
+            const rowObject = row.reduce((acc, value, index) => {
+              acc[`${tags[index]}`] = value; // Maps the value to the corresponding tag
               return acc;
             }, {});
+            // Add unique 12-character id to each object
+            rowObject.id = uuidv4().replace(/-/g, "").slice(0, 12);
+            return rowObject;
           });
           setSmtpReciver(formattedData);
         },
@@ -129,7 +120,6 @@ const SmtpUI = () => {
   };
 
   const handelSmtpCsv = (event) => {
-    console.log("dewfedsv");
     const file = event.target.files[0];
     if (file) {
       Papa.parse(file, {
@@ -423,76 +413,91 @@ const SmtpUI = () => {
         htmlFile={htmlFile}
         setHtmlFile={setHtmlFile}
       />
-   <Box sx={{display:"flex",alignItems:"center",justifyContent:"space-between",marginTop:"5px"}}>  
-    <Box
-        component="form"
+      <Box
         sx={{
           display: "flex",
-          flexDirection: "column",
-          gap: "15px",
-          backgroundColor: "#2A2A2A",
-          borderRadius: "8px",
-          color: "#FFFFFF",
-          padding: "10px",
-          paddingBottom: "20px",
-          marginBottom: "5px",
-          width:"70%"
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginTop: "5px",
         }}
       >
-        {/* Sender Name Field */}
-        <TextField
-          id="outlined-start-adornment-1"
-          variant="filled"
-          size="small"
-          InputLabelProps={{ style: { color: "#fff" } }}
-          onChange={(e) => {
-            setFileName(e.target.value);
-          }}
-          value={fileName}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start" sx={{ color: "white" }}>
-                File Name :
-              </InputAdornment>
-            ),
-            style: { color: "#fff", backgroundColor: "#333" },
-          }}
+        <Box
+          component="form"
           sx={{
-            "& .MuiFilledInput-root": {
-              backgroundColor: "#333",
-            },
-            width: "100%",
-            border: "1px solid #444",
-            borderRadius: "5px",
-            height: "35px",
-          }}
-        />
-
-        {/* Another Sender Name Field */}
-        <Select
-          value={fileType}
-          onChange={(e) => {
-            setFileType(e.target.value);
-          }}
-          size="small"
-          sx={{
-            minWidth: 120,
-            color: "white",
-            border: "1px solid #444",
-            borderRadius: "5px",
-            backgroundColor: "#333",
-            height: "35px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "15px",
+            backgroundColor: "#2A2A2A",
+            borderRadius: "8px",
+            color: "#FFFFFF",
+            padding: "10px",
+            paddingBottom: "20px",
+            marginBottom: "5px",
+            width: "70%",
           }}
         >
-          <MenuItem value="Image">Image</MenuItem>
-          <MenuItem value="Pdf">Pdf</MenuItem>
-        </Select>
-      </Box>
-      <Box sx={{display:"flex",alignItems:"center",justifyContent:"center"}}>
-      <StyledButton variant="contained" >Send Email</StyledButton>
+          {/* Sender Name Field */}
+          <TextField
+            id="outlined-start-adornment-1"
+            variant="filled"
+            size="small"
+            InputLabelProps={{ style: { color: "#fff" } }}
+            onChange={(e) => {
+              setFileName(e.target.value);
+            }}
+            value={fileName}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start" sx={{ color: "white" }}>
+                  File Name :
+                </InputAdornment>
+              ),
+              style: { color: "#fff", backgroundColor: "#333" },
+            }}
+            sx={{
+              "& .MuiFilledInput-root": {
+                backgroundColor: "#333",
+              },
+              width: "100%",
+              border: "1px solid #444",
+              borderRadius: "5px",
+              height: "35px",
+            }}
+          />
+
+          {/* Another Sender Name Field */}
+          <Select
+            value={fileType}
+            onChange={(e) => {
+              setFileType(e.target.value);
+            }}
+            size="small"
+            sx={{
+              minWidth: 120,
+              color: "white",
+              border: "1px solid #444",
+              borderRadius: "5px",
+              backgroundColor: "#333",
+              height: "35px",
+            }}
+          >
+            <MenuItem value="Image">Image</MenuItem>
+            <MenuItem value="Pdf">Pdf</MenuItem>
+          </Select>
+        </Box>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <StyledButton variant="contained" onClick={handelSubmit}>
+            Send Email
+          </StyledButton>
+        </Box>
       </Box>
     </Box>
-    </Box> 
   );
 };
 
