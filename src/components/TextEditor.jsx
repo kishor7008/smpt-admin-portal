@@ -4,13 +4,12 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import Images from "../assets/images";
 
-const TextEditor = ({content, setContent, htmlFile, setHtmlFile}) => {
+const TextEditor = ({content, setContent, htmlFile, setHtmlFile,setChecked,check}) => {
 
   const handleEditorTextChange = (value) => setContent(value);
 
   // Handle changes in the HTML textarea
   const handleHtmlTextChange = (event) => setHtmlFile(event.target.value);
-  const [check, setChecked] = useState(false);
   const toggleCheck = () => {
     setChecked(!check);
   };

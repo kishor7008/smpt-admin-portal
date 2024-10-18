@@ -14,6 +14,7 @@ import { styled } from "@mui/system";
 import TextEditor from "./TextEditor";
 import Images from "../assets/images";
 import { v4 as uuidv4 } from "uuid";
+import axios from "axios";
 // Container styles
 const Container = styled(Box)({
   display: "flex",
@@ -60,6 +61,8 @@ const SmtpUI = ({ setResult }) => {
   const [fileName, setFileName] = useState("");
   const [content, setContent] = useState("");
   const [htmlFile, setHtmlFile] = useState("");
+  const [check, setChecked] = useState(false);
+
   const StyledButton = styled(Button)({
     backgroundColor: "#1e90ff",
     color: "#fff",
@@ -76,23 +79,55 @@ const SmtpUI = ({ setResult }) => {
   function renderTemplate(obj, htmlString) {
     return htmlString.replace(/\{\{(\w+)\}\}/g, (match, key) => obj[key] || "");
   }
-  const handelSubmit = () => {
+  const handelSubmit = async () => {
     let combined = [];
     smtpSender.forEach((sender) => {
       smtpReciver.forEach((receiver) => {
-        combined.push({
+        const baseObject = {
           senderEmail: sender.email,
           senderPassword: sender.pass,
           receiverEmail: receiver.email,
           senderName: renderTemplate(receiver, senderName),
-          receiverContent: renderTemplate(receiver, content),
-          receiverAttachment: renderTemplate(receiver, htmlFile), // Corrected typo: "receiverAttachememt" to "receiverAttachment"
-          filename: renderTemplate(receiver, fileName),
-          fileType: fileType,
           id: receiver.id,
-        });
+          subject: renderTemplate(receiver, subject),
+        };
+    
+        if (check) {
+          // If check is true, add the additional properties
+          combined.push({
+            ...baseObject,
+            receiverContent: renderTemplate(receiver, content),
+            receiverAttachment: renderTemplate(receiver, htmlFile), // Corrected typo: "receiverAttachememt" to "receiverAttachment"
+            filename: renderTemplate(receiver, fileName),
+            fileType: fileType,
+          });
+        } else {
+          // If check is false, push the base object
+          combined.push(baseObject);
+        }
       });
     });
+    
+    await axios
+      .post("http://localhost:3002/send-email", combined)
+      .then((response) => {
+        // Handle success
+        console.log("Response:", response.data);
+        setResult(response.data);
+        setSmtpReciver([]);
+        setSmtpSender([]);
+        setSenderName("");
+        setSubject("");
+        setFileName("");
+        setContent("");
+
+        setHtmlFile("");
+      })
+      .catch((error) => {
+        // Handle error
+        console.error("Error:", error);
+      });
+
     console.log(combined, "combined");
   };
 
@@ -284,7 +319,7 @@ const SmtpUI = ({ setResult }) => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start" sx={{ color: "white" }}>
-                    Sender Name :
+                    <Box sx={{ color: "white" }}>Sender Name :</Box>
                   </InputAdornment>
                 ),
                 style: { color: "#fff", backgroundColor: "#333" },
@@ -312,7 +347,10 @@ const SmtpUI = ({ setResult }) => {
               InputLabelProps={{ style: { color: "#fff" } }}
               InputProps={{
                 startAdornment: (
-                  <InputAdornment position="start">Subject :</InputAdornment>
+                  <InputAdornment position="start">
+                    {" "}
+                    <Box sx={{ color: "white" }}>Subject :</Box> :
+                  </InputAdornment>
                 ),
                 style: { color: "#fff", backgroundColor: "#333" },
               }}
@@ -412,6 +450,8 @@ const SmtpUI = ({ setResult }) => {
         setContent={setContent}
         htmlFile={htmlFile}
         setHtmlFile={setHtmlFile}
+        check={check}
+         setChecked={setChecked}
       />
       <Box
         sx={{
@@ -449,7 +489,7 @@ const SmtpUI = ({ setResult }) => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start" sx={{ color: "white" }}>
-                  File Name :
+                  <Box sx={{ color: "white" }}>File Name :</Box>
                 </InputAdornment>
               ),
               style: { color: "#fff", backgroundColor: "#333" },

@@ -5,11 +5,11 @@ import SendEmailForm from '../components/SendEmailForm';
 export default function Home() {
   const [result, setResult] = useState({
     message: "Emails sent",
-    totalSenders: 6,
+    totalSenders: 0,
     senderFailures: 0,
-    totalReceivers: 6,
+    totalReceivers: 0,
     receiverFailures: 0,
-    responseTime: "21.468 seconds",
+    responseTime: "0.00 seconds",
   });
   return (
     
