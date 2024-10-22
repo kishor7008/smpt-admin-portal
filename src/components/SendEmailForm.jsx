@@ -119,6 +119,7 @@ const SmtpUI = ({ setResult }) => {
           senderPassword: sender.pass,
           receiverEmail: receiver.email,
           senderName: renderTemplate(receiver, senderName),
+          receiverContent: renderTemplate(receiver, content),
           id: receiver.id,
           subject: renderTemplate(receiver, subject),
         };
