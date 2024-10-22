@@ -9,13 +9,17 @@ import {
   TextField,
   InputAdornment,
   Chip,
+  CircularProgress,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import TextEditor from "./TextEditor";
 import Images from "../assets/images";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
+import { toast, ToastContainer } from "react-toastify";
 // Container styles
+import "react-toastify/dist/ReactToastify.css";
+
 const Container = styled(Box)({
   display: "flex",
   flexDirection: "column",
@@ -50,7 +54,7 @@ const RemoveButton = styled(Button)({
 const SmtpUI = ({ setResult }) => {
   const [smtpReciver, setSmtpReciver] = useState([]);
   const [smtpSender, setSmtpSender] = useState([]);
-  const [tags, setTags] = useState(["email", "name", "content", "c5"]);
+  const [tags, setTags] = useState(["email", "name", "content"]);
   const [isTagInputVisible, setIsTagInputVisible] = useState(false); // State for showing/hiding input field
   const [newTag, setNewTag] = useState(""); // State for new tag input
   const auth = ["email", "pass"];
@@ -62,6 +66,7 @@ const SmtpUI = ({ setResult }) => {
   const [content, setContent] = useState("");
   const [htmlFile, setHtmlFile] = useState("");
   const [check, setChecked] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const StyledButton = styled(Button)({
     backgroundColor: "#1e90ff",
@@ -79,7 +84,33 @@ const SmtpUI = ({ setResult }) => {
   function renderTemplate(obj, htmlString) {
     return htmlString.replace(/\{\{(\w+)\}\}/g, (match, key) => obj[key] || "");
   }
+  const validateInputs = () => {
+    if (!smtpSender.length) {
+      toast.error("Please upload an SMTP file.");
+      return false;
+    }
+    if (!smtpReciver.length) {
+      toast.error("Please upload a recipient CSV file.");
+      return false;
+    }
+    if (!senderName.trim()) {
+      toast.error("Sender Name is required.");
+      return false;
+    }
+    if (!subject.trim()) {
+      toast.error("Subject is required.");
+      return false;
+    }
+    if (!fileName.trim() && check) {
+      toast.error("File Name is required when attachments are checked.");
+      return false;
+    }
+    return true;
+  };
   const handelSubmit = async () => {
+
+    if (!validateInputs()) return;
+    setLoading(true)
     let combined = [];
     smtpSender.forEach((sender) => {
       smtpReciver.forEach((receiver) => {
@@ -91,7 +122,7 @@ const SmtpUI = ({ setResult }) => {
           id: receiver.id,
           subject: renderTemplate(receiver, subject),
         };
-    
+
         if (check) {
           // If check is true, add the additional properties
           combined.push({
@@ -107,7 +138,7 @@ const SmtpUI = ({ setResult }) => {
         }
       });
     });
-    
+    console.log(combined, "combined");
     await axios
       .post("http://localhost:3002/send-email", combined)
       .then((response) => {
@@ -122,9 +153,10 @@ const SmtpUI = ({ setResult }) => {
         setContent("");
 
         setHtmlFile("");
+        setLoading(false)
       })
       .catch((error) => {
-        // Handle error
+        setLoading(false)
         console.error("Error:", error);
       });
 
@@ -182,6 +214,7 @@ const SmtpUI = ({ setResult }) => {
   };
   return (
     <Box sx={{ padding: "9px", backgroundColor: "#1E1E1E" }}>
+      <ToastContainer />
       <Box sx={{ display: "flex" }}>
         <Box sx={{ width: "70%", marginRight: "10px" }}>
           <Container sx={{ marginBottom: "10px", gap: 0 }}>
@@ -250,8 +283,6 @@ const SmtpUI = ({ setResult }) => {
                 }}
               >
                 <MenuItem value="GMAIL">GMAIL</MenuItem>
-                <MenuItem value="YAHOO">YAHOO</MenuItem>
-                <MenuItem value="OUTLOOK">OUTLOOK</MenuItem>
               </Select>
 
               <Row>
@@ -451,7 +482,7 @@ const SmtpUI = ({ setResult }) => {
         htmlFile={htmlFile}
         setHtmlFile={setHtmlFile}
         check={check}
-         setChecked={setChecked}
+        setChecked={setChecked}
       />
       <Box
         sx={{
@@ -532,9 +563,20 @@ const SmtpUI = ({ setResult }) => {
             justifyContent: "center",
           }}
         >
-          <StyledButton variant="contained" onClick={handelSubmit}>
-            Send Email
-          </StyledButton>
+           <StyledButton 
+      variant="contained" 
+      onClick={handelSubmit} 
+      disabled={loading}
+    >
+      {loading ? (
+        <CircularProgress 
+          size={24} 
+          className="loading-spinner" 
+        />
+      ) : (
+        'Send Email'
+      )}
+    </StyledButton>
         </Box>
       </Box>
     </Box>
