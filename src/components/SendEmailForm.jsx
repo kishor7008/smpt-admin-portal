@@ -19,6 +19,8 @@ import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 // Container styles
 import "react-toastify/dist/ReactToastify.css";
+import ModalContainer from "./ModalContainer";
+import CustomTagForm from "./CustomTagForm";
 
 const Container = styled(Box)({
   display: "flex",
@@ -51,6 +53,12 @@ const RemoveButton = styled(Button)({
   },
 });
 
+const ModaleStyle = styled(Box)({
+  width: "300px",
+  height: "200px"
+})
+
+
 const SmtpUI = ({ setResult }) => {
   const [smtpReciver, setSmtpReciver] = useState([]);
   const [smtpSender, setSmtpSender] = useState([]);
@@ -67,6 +75,7 @@ const SmtpUI = ({ setResult }) => {
   const [htmlFile, setHtmlFile] = useState("");
   const [check, setChecked] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const StyledButton = styled(Button)({
     backgroundColor: "#1e90ff",
@@ -128,7 +137,7 @@ const SmtpUI = ({ setResult }) => {
           // If check is true, add the additional properties
           combined.push({
             ...baseObject,
-            receiverContent: renderTemplate(receiver, content),
+            // receiverContent: renderTemplate(receiver, content),
             receiverAttachment: renderTemplate(receiver, htmlFile), // Corrected typo: "receiverAttachememt" to "receiverAttachment"
             filename: renderTemplate(receiver, fileName),
             fileType: fileType,
@@ -152,7 +161,6 @@ const SmtpUI = ({ setResult }) => {
         setSubject("");
         setFileName("");
         setContent("");
-
         setHtmlFile("");
         setLoading(false)
       })
@@ -206,16 +214,20 @@ const SmtpUI = ({ setResult }) => {
     }
   };
 
-  const handleAddTag = () => {
-    if (newTag.trim()) {
-      setTags([...tags, newTag.trim()]);
+  const handleAddTag = (data) => {
+    console.log("save value", data, data.tagName)
+
+    if (data.tagName.trim()) {
+      setTags([...tags, data.tagName.trim()]);
       setNewTag("");
-      setIsTagInputVisible(false); // Hide input field after adding tag
+      // setIsTagInputVisible(false); // Hide input field after adding tag
+      setOpen(false)
     }
   };
   return (
     <Box sx={{ padding: "9px", backgroundColor: "#1E1E1E" }}>
       <ToastContainer />
+      {/* <CustomTagForm /> */}
       <Box sx={{ display: "flex" }}>
         <Box sx={{ width: "70%", marginRight: "10px" }}>
           <Container sx={{ marginBottom: "10px", gap: 0 }}>
@@ -441,7 +453,7 @@ const SmtpUI = ({ setResult }) => {
             ))}
 
             {/* Add Tag Input */}
-            {isTagInputVisible && (
+            {/* {isTagInputVisible && (
               <TextField
                 size="small"
                 value={newTag}
@@ -455,24 +467,34 @@ const SmtpUI = ({ setResult }) => {
                   width: "120px",
                 }}
               />
-            )}
+            )} */}
+
+
 
             {/* Add Tag and Save Button */}
             <Button
-              onClick={() => setIsTagInputVisible(true)}
+              onClick={() => {
+                setIsTagInputVisible(true)
+                setOpen(true)
+              }}
               sx={{ color: "#00BFFF", textTransform: "none" }}
             >
-              {isTagInputVisible ? "" : "Add Tags+"}
+              {open ? "" : "Add Tags+"}
             </Button>
 
-            {isTagInputVisible && (
+            {open ? <>
+              <ModaleStyle>
+                <ModalContainer open={open} handleAddTagData={handleAddTag} setOpen={setOpen} style={{ width: "300px", height: "200px", display: "flex", justifyContent: "center", alignItems: "center" }} />
+              </ModaleStyle>
+            </> : ""}
+            {/* {isTagInputVisible && (
               <Button
                 onClick={handleAddTag}
                 sx={{ color: "#00BFFF", textTransform: "none" }}
               >
                 Save
               </Button>
-            )}
+            )} */}
           </Box>
         </Box>
       </Box>
@@ -564,20 +586,20 @@ const SmtpUI = ({ setResult }) => {
             justifyContent: "center",
           }}
         >
-           <StyledButton 
-      variant="contained" 
-      onClick={handelSubmit} 
-      disabled={loading}
-    >
-      {loading ? (
-        <CircularProgress 
-          size={24} 
-          className="loading-spinner" 
-        />
-      ) : (
-        'Send Email'
-      )}
-    </StyledButton>
+          <StyledButton
+            variant="contained"
+            onClick={handelSubmit}
+            disabled={loading}
+          >
+            {loading ? (
+              <CircularProgress
+                size={24}
+                className="loading-spinner"
+              />
+            ) : (
+              'Send Email'
+            )}
+          </StyledButton>
         </Box>
       </Box>
     </Box>
