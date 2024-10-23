@@ -32,7 +32,39 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
+}
+
+
+
+
+/* Style the input field */
+/* Style the input field */
+.hover-input {
+  padding: 10px;
+  width: 200px;
+}
+
+/* Initially hide the table */
+.hover-table {
+  display: none;
+  border-collapse: collapse;
+  width: 300px;
+  margin-top: 10px;
+
+}
+
+.hover-table th,
+.hover-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+/* Show the table when input is hovered */
+.input-container:hover .hover-table {
+  display: table;
 }

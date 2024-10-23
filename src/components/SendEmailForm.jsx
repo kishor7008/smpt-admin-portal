@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Papa from "papaparse"; // Import PapaParse
+import "../App.css";
 import {
   Box,
   Button,
@@ -76,6 +77,12 @@ const SmtpUI = ({ setResult }) => {
   const [check, setChecked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [showTable, setShowTable] = useState(false);
+
+  // Handle hover events for table ... 
+  const handleMouseEnter = () => setShowTable(true);
+  const handleMouseLeave = () => setShowTable(false);
+
 
   const StyledButton = styled(Button)({
     backgroundColor: "#1e90ff",
@@ -224,6 +231,8 @@ const SmtpUI = ({ setResult }) => {
       setOpen(false)
     }
   };
+
+  console.log("smtpReciver", smtpReciver)
   return (
     <Box sx={{ padding: "9px", backgroundColor: "#1E1E1E" }}>
       <ToastContainer />
@@ -237,19 +246,58 @@ const SmtpUI = ({ setResult }) => {
             </Row>
 
             {/* File Upload Row */}
-            <Row>
-              <input
-                type="file"
-                accept=".csv"
-                onChange={handelRecipients}
-                style={{ display: "none" }}
-                id="csv-upload" // Hidden input for file upload
-              />
-              <label htmlFor="csv-upload">
-                <CsvButton variant="text" component="span">
-                  Select CSV
-                </CsvButton>
-              </label>
+            <Row >
+              <div className="input-container"
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                style={{ position: "relative" }}
+              >
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={handelRecipients}
+                  style={{ display: "none" }}
+                  className="hover-input"
+                  id="csv-upload" // Hidden input for file upload
+                />
+
+                <label htmlFor="csv-upload"
+                >
+                  <CsvButton variant="text" component="span">
+                    Select CSV
+                  </CsvButton>
+                </label>
+                {/* table  */}
+                {smtpReciver.length > 0 && showTable && (
+                  <table className="hover-table"
+                    style={{
+                      position: "absolute", // Make table absolutely positioned
+                      top: "70%", // Position it just outside the container
+                      left: "0",
+                      zIndex: 1000,
+                      background: "#3c3c3c",
+                      border: "1px solid black",
+                    }}
+                  >
+                    <thead>
+                      <tr>
+                        <th>Email</th>
+                        <th>Name</th>
+                        <th>Content</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {smtpReciver.map((e) => (
+                        <tr>
+                          <td>{e.email}</td>
+                          <td>{e.name}</td>
+                          <td>{e.content}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
               <Typography variant="body2" color="#B0B0B0">
                 Total Recipients {smtpReciver.length}{" "}
                 {/* Display the number of recipients */}
