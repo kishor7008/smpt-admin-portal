@@ -17,11 +17,13 @@ import TextEditor from "./TextEditor";
 import Images from "../assets/images";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
+import ReactQuill from 'react-quill'; // For HTML editor
+import 'react-quill/dist/quill.snow.css';
 import { toast, ToastContainer } from "react-toastify";
 // Container styles
 import "react-toastify/dist/ReactToastify.css";
 import ModalContainer from "./ModalContainer";
-import CustomTagForm from "./CustomTagForm";
+// import CustomTagForm from "./CustomTagForm";
 
 const Container = styled(Box)({
   display: "flex",
@@ -99,6 +101,7 @@ const SmtpUI = ({ setResult }) => {
   });
   function renderTemplate(obj, htmlString) {
     return htmlString.replace(/\{\{(\w+)\}\}/g, (match, key) => obj[key] || "");
+
   }
   const validateInputs = () => {
     if (!smtpSender.length) {
@@ -155,7 +158,7 @@ const SmtpUI = ({ setResult }) => {
         }
       });
     });
-    console.log(combined, "combined");
+    // console.log(combined, "combined");
     await axios
       .post("http://localhost:3002/send-email", combined)
       .then((response) => {
@@ -178,6 +181,8 @@ const SmtpUI = ({ setResult }) => {
 
     console.log(combined, "combined");
   };
+
+  console.log("content", content)
 
   const handelRecipients = (event) => {
     const file = event.target.files[0];
@@ -222,7 +227,7 @@ const SmtpUI = ({ setResult }) => {
   };
 
   const handleAddTag = (data) => {
-    console.log("save value", data, data.tagName)
+    // console.log("save value", data, data.tagName)
 
     if (data.tagName.trim()) {
       setTags([...tags, data.tagName.trim()]);
@@ -268,7 +273,7 @@ const SmtpUI = ({ setResult }) => {
                   </CsvButton>
                 </label>
                 {/* table  */}
-                {smtpReciver.length > 0 && showTable && (
+                {/* {smtpReciver.length > 0 && showTable && ( */}
                   <table className="hover-table"
                     style={{
                       position: "absolute", // Make table absolutely positioned
@@ -286,17 +291,29 @@ const SmtpUI = ({ setResult }) => {
                         <th>Content</th>
                       </tr>
                     </thead>
-                    <tbody>
-                      {smtpReciver.map((e) => (
+
+                    {smtpReciver.length > 0 && showTable ?
+                      <tbody>
+                        {smtpReciver.map((e) => (
+                          <tr>
+                            <td>{e.email}</td>
+                            <td>{e.name}</td>
+                            <td>{e.content}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      :
+                      <tbody>
+
                         <tr>
-                          <td>{e.email}</td>
-                          <td>{e.name}</td>
-                          <td>{e.content}</td>
+                          <td>NO</td>
+                          <td>Data</td>
+                          <td>Found</td>
                         </tr>
-                      ))}
-                    </tbody>
+
+                      </tbody>}
                   </table>
-                )}
+                {/* )} */}
               </div>
               <Typography variant="body2" color="#B0B0B0">
                 Total Recipients {smtpReciver.length}{" "}

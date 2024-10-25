@@ -4,9 +4,9 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import Images from "../assets/images";
 
-const TextEditor = ({content, setContent, htmlFile, setHtmlFile,setChecked,check}) => {
+const TextEditor = ({ content, setContent, htmlFile, setHtmlFile, setChecked, check }) => {
 
-  const handleEditorTextChange = (value) => setContent(value);
+  const handleEditorTextChange = (event) => setContent(event.target.value);
 
   // Handle changes in the HTML textarea
   const handleHtmlTextChange = (event) => setHtmlFile(event.target.value);
@@ -69,7 +69,13 @@ const TextEditor = ({content, setContent, htmlFile, setHtmlFile,setChecked,check
           Message (Body)
         </Box>
         <div style={quillContainerStyle}>
-          <ReactQuill
+          {/* <ReactQuill
+            value={content} // Use content for the rich text editor state
+            onChange={handleEditorTextChange}
+            style={{ height: "100%", backgroundColor: "#333" }}
+          /> */}
+
+          <textarea
             value={content} // Use content for the rich text editor state
             onChange={handleEditorTextChange}
             style={{ height: "100%", backgroundColor: "#333" }}
