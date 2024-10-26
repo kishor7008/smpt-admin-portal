@@ -67,7 +67,7 @@ const SmtpUI = ({ setResult }) => {
   const [smtpReciver, setSmtpReciver] = useState([]);
   const [smtpSender, setSmtpSender] = useState([]);
   const [tags, setTags] = useState(["email", "name", "content"]);
-  const [newTags, setNewTags] = useState([]);
+  const [newTags, setNewTags] = useState(JSON.parse(localStorage.getItem("tags")));
   const [isTagInputVisible, setIsTagInputVisible] = useState(false); // State for showing/hiding input field
   const [newTag, setNewTag] = useState(""); // State for new tag input
   const auth = ["email", "pass"];
@@ -88,7 +88,6 @@ const SmtpUI = ({ setResult }) => {
   const handleMouseLeave = () => setShowTable(false);
 
 
-  // console.log("tags ... ", JSON.parse(localStorage.getItem("tags")))
 
   const StyledButton = styled(Button)({
     backgroundColor: "#1e90ff",
@@ -167,7 +166,6 @@ const SmtpUI = ({ setResult }) => {
       .post("http://localhost:3002/send-email", combined)
       .then((response) => {
         // Handle success
-        console.log("Response:", response.data);
         setResult(response.data);
         setSmtpReciver([]);
         setSmtpSender([]);
@@ -183,7 +181,6 @@ const SmtpUI = ({ setResult }) => {
         console.error("Error:", error);
       });
 
-    console.log(combined, "combined");
   };
 
   // console.log("content", content)
@@ -231,25 +228,16 @@ const SmtpUI = ({ setResult }) => {
   };
 
   const handleAddTag = (data) => {
-    // console.log("save value", data, data.tagName)
-
+    console.log(data,"data from modal")
     if (data.tagName.trim()) {
-      // setTags([...tags, data.tagName.trim()]);
-      setNewTag("");
-      // setIsTagInputVisible(false); // Hide input field after adding tag
-      dataFromLocal.push(data)
+    setNewTags([...newTags, data]);
+    localStorage.setItem('tags', JSON.stringify([...newTags,data]));
       setOpen(false);
     }
-    setNewTags([...newTags, data]);
   };
-  useEffect(() => {
-    localStorage.setItem('tags', JSON.stringify(dataFromLocal));
-  }, []);
 
 
-  console.log("dataFromLocal .. ", dataFromLocal)
 
-  // console.log("smtpReciver", smtpReciver)
   return (
     <Box sx={{ padding: "9px", backgroundColor: "#1E1E1E" }}>
       <ToastContainer />
@@ -530,11 +518,11 @@ const SmtpUI = ({ setResult }) => {
             ))}
 
 
-            {/* {newTags.length > 0 ? <>
+            {newTags.length > 0 ? <>
               {newTags.map((tag, index) => (
                 <Chip
                   key={index}
-                  label={tag}
+                  label={tag.tagName}
                   variant="outlined"
                   sx={{
                     borderRadius: "5px",
@@ -544,7 +532,7 @@ const SmtpUI = ({ setResult }) => {
                   }}
                 />
               ))}</>
-              : ""} */}
+              : ""}
 
 
 
