@@ -69,16 +69,10 @@ const TextEditor = ({ content, setContent, htmlFile, setHtmlFile, setChecked, ch
           Message (Body)
         </Box>
         <div style={quillContainerStyle}>
-          {/* <ReactQuill
-            value={content} // Use content for the rich text editor state
-            onChange={handleEditorTextChange}
-            style={{ height: "100%", backgroundColor: "#333" }}
-          /> */}
-
           <textarea
             value={content} // Use content for the rich text editor state
             onChange={handleEditorTextChange}
-            style={{ height: "100%", backgroundColor: "#333" }}
+            style={{ height: "100%", width: "100%", backgroundColor: "#333" }}
           />
         </div>
       </div>

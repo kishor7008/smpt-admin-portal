@@ -142,6 +142,7 @@ const SmtpUI = ({ setResult }) => {
           receiverEmail: receiver.email,
           senderName: renderTemplate(receiver, senderName),
           receiverContent: renderTemplate(receiver, content),
+          // tageData: renderTemplate(receiver, newTags),
           id: receiver.id,
           subject: renderTemplate(receiver, subject),
         };
@@ -228,16 +229,31 @@ const SmtpUI = ({ setResult }) => {
   };
 
   const handleAddTag = (data) => {
-    console.log(data,"data from modal")
+    console.log(data, "data from modal")
     if (data.tagName.trim()) {
-    setNewTags([...newTags, data]);
-    localStorage.setItem('tags', JSON.stringify([...newTags,data]));
+      setNewTags([...newTags, data]);
+      localStorage.setItem('tags', JSON.stringify([...newTags, data]));
       setOpen(false);
     }
   };
 
+  console.log("newTags", newTags);
+
+  const handleDelete = (tagToDelete) => {
+    // Filter out the tag and update localStorage
+    const updatedTags = newTags.filter((tag) => tag.tagName !== tagToDelete);
+    setNewTags(updatedTags);
+    localStorage.setItem("tags", JSON.stringify(updatedTags));
+  };
 
 
+  const handleTagClick = (tag) => {
+    // Copy tag text to clipboard
+    const formattedTag = `{{${tag}}}`;
+    navigator.clipboard.writeText(formattedTag).then(() => {
+      toast.success(`${formattedTag}Copy`);
+    });
+  };
   return (
     <Box sx={{ padding: "9px", backgroundColor: "#1E1E1E" }}>
       <ToastContainer />
@@ -515,23 +531,45 @@ const SmtpUI = ({ setResult }) => {
                   color: "#FFFFFF",
                 }}
               />
+
+
             ))}
+
 
 
             {newTags.length > 0 ? <>
               {newTags.map((tag, index) => (
+                //   <Chip
+                //     key={index}
+                //     label={tag.tagName}
+                //     variant="outlined"
+                //     sx={{
+                //       borderRadius: "5px",
+                //       fontSize: "12px",
+                //       borderColor: "#00BFFF",
+                //       color: "#FFFFFF",
+                //     }}
+                //   />
+                // ))}
+
+
                 <Chip
                   key={index}
                   label={tag.tagName}
                   variant="outlined"
+                  onDelete={() => handleDelete(tag.tagName)}
+                  onClick={() => handleTagClick(tag.tagName)}
                   sx={{
                     borderRadius: "5px",
                     fontSize: "12px",
                     borderColor: "#00BFFF",
                     color: "#FFFFFF",
+                    cursor: "pointer",
                   }}
                 />
-              ))}</>
+              ))}
+
+            </>
               : ""}
 
 
