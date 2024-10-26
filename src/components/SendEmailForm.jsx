@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Papa from "papaparse"; // Import PapaParse
 import "../App.css";
 import {
@@ -63,9 +63,11 @@ const ModaleStyle = styled(Box)({
 
 
 const SmtpUI = ({ setResult }) => {
+  const dataFromLocal = JSON.parse(localStorage.getItem("tags")) || []
   const [smtpReciver, setSmtpReciver] = useState([]);
   const [smtpSender, setSmtpSender] = useState([]);
   const [tags, setTags] = useState(["email", "name", "content"]);
+  const [newTags, setNewTags] = useState([]);
   const [isTagInputVisible, setIsTagInputVisible] = useState(false); // State for showing/hiding input field
   const [newTag, setNewTag] = useState(""); // State for new tag input
   const auth = ["email", "pass"];
@@ -85,6 +87,8 @@ const SmtpUI = ({ setResult }) => {
   const handleMouseEnter = () => setShowTable(true);
   const handleMouseLeave = () => setShowTable(false);
 
+
+  // console.log("tags ... ", JSON.parse(localStorage.getItem("tags")))
 
   const StyledButton = styled(Button)({
     backgroundColor: "#1e90ff",
@@ -182,7 +186,7 @@ const SmtpUI = ({ setResult }) => {
     console.log(combined, "combined");
   };
 
-  console.log("content", content)
+  // console.log("content", content)
 
   const handelRecipients = (event) => {
     const file = event.target.files[0];
@@ -230,14 +234,22 @@ const SmtpUI = ({ setResult }) => {
     // console.log("save value", data, data.tagName)
 
     if (data.tagName.trim()) {
-      setTags([...tags, data.tagName.trim()]);
+      // setTags([...tags, data.tagName.trim()]);
       setNewTag("");
       // setIsTagInputVisible(false); // Hide input field after adding tag
-      setOpen(false)
+      dataFromLocal.push(data)
+      setOpen(false);
     }
+    setNewTags([...newTags, data]);
   };
+  useEffect(() => {
+    localStorage.setItem('tags', JSON.stringify(dataFromLocal));
+  }, []);
 
-  console.log("smtpReciver", smtpReciver)
+
+  console.log("dataFromLocal .. ", dataFromLocal)
+
+  // console.log("smtpReciver", smtpReciver)
   return (
     <Box sx={{ padding: "9px", backgroundColor: "#1E1E1E" }}>
       <ToastContainer />
@@ -274,45 +286,45 @@ const SmtpUI = ({ setResult }) => {
                 </label>
                 {/* table  */}
                 {/* {smtpReciver.length > 0 && showTable && ( */}
-                  <table className="hover-table"
-                    style={{
-                      position: "absolute", // Make table absolutely positioned
-                      top: "70%", // Position it just outside the container
-                      left: "0",
-                      zIndex: 1000,
-                      background: "#3c3c3c",
-                      border: "1px solid black",
-                    }}
-                  >
-                    <thead>
-                      <tr>
-                        <th>Email</th>
-                        <th>Name</th>
-                        <th>Content</th>
-                      </tr>
-                    </thead>
+                <table className="hover-table"
+                  style={{
+                    position: "absolute", // Make table absolutely positioned
+                    top: "70%", // Position it just outside the container
+                    left: "0",
+                    zIndex: 1000,
+                    background: "#3c3c3c",
+                    border: "1px solid black",
+                  }}
+                >
+                  <thead>
+                    <tr>
+                      <th>Email</th>
+                      <th>Name</th>
+                      <th>Content</th>
+                    </tr>
+                  </thead>
 
-                    {smtpReciver.length > 0 && showTable ?
-                      <tbody>
-                        {smtpReciver.map((e) => (
-                          <tr>
-                            <td>{e.email}</td>
-                            <td>{e.name}</td>
-                            <td>{e.content}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      :
-                      <tbody>
-
+                  {smtpReciver.length > 0 && showTable ?
+                    <tbody>
+                      {smtpReciver.map((e) => (
                         <tr>
-                          <td>NO</td>
-                          <td>Data</td>
-                          <td>Found</td>
+                          <td>{e.email}</td>
+                          <td>{e.name}</td>
+                          <td>{e.content}</td>
                         </tr>
+                      ))}
+                    </tbody>
+                    :
+                    <tbody>
 
-                      </tbody>}
-                  </table>
+                      <tr>
+                        <td>NO</td>
+                        <td>Data</td>
+                        <td>Found</td>
+                      </tr>
+
+                    </tbody>}
+                </table>
                 {/* )} */}
               </div>
               <Typography variant="body2" color="#B0B0B0">
@@ -516,6 +528,25 @@ const SmtpUI = ({ setResult }) => {
                 }}
               />
             ))}
+
+
+            {/* {newTags.length > 0 ? <>
+              {newTags.map((tag, index) => (
+                <Chip
+                  key={index}
+                  label={tag}
+                  variant="outlined"
+                  sx={{
+                    borderRadius: "5px",
+                    fontSize: "12px",
+                    borderColor: "#00BFFF",
+                    color: "#FFFFFF",
+                  }}
+                />
+              ))}</>
+              : ""} */}
+
+
 
             {/* Add Tag Input */}
             {/* {isTagInputVisible && (
