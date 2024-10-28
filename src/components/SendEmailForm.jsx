@@ -23,6 +23,7 @@ import { toast, ToastContainer } from "react-toastify";
 // Container styles
 import "react-toastify/dist/ReactToastify.css";
 import ModalContainer from "./ModalContainer";
+import { generateRandomString, transformArrayToObject } from "../utils/func";
 // import CustomTagForm from "./CustomTagForm";
 
 const Container = styled(Box)({
@@ -131,12 +132,16 @@ const SmtpUI = ({ setResult }) => {
     return true;
   };
   const handelSubmit = async () => {
-
+    const updatedReceivers = smtpReciver.map((item) => ({
+      ...item,
+      ...transformArrayToObject(newTags)
+    }));
+    console.log(updatedReceivers,"updatedReceivers")
     if (!validateInputs()) return;
     setLoading(true)
     let combined = [];
     smtpSender.forEach((sender) => {
-      smtpReciver.forEach((receiver) => {
+      updatedReceivers.forEach((receiver) => {
         const baseObject = {
           senderEmail: sender.email,
           senderPassword: sender.pass,
@@ -167,7 +172,7 @@ const SmtpUI = ({ setResult }) => {
     });
 
     console.log(saveRandomNo, "combine", combined)
-    // console.log(combined, "combined");
+    console.log(combined, "combined");
     await axios
       .post("http://localhost:3002/send-email", combined)
       .then((response) => {
@@ -243,12 +248,6 @@ const SmtpUI = ({ setResult }) => {
       setSaveRandomNo(data.randomNumber);
     }
   };
-
-
-
-
-  // console.log("newTags", newTags);
-
   const handleDelete = (tagToDelete) => {
     // Filter out the tag and update localStorage
     const updatedTags = newTags.filter((tag) => tag.tagName !== tagToDelete);
@@ -266,6 +265,9 @@ const SmtpUI = ({ setResult }) => {
 
     console.log("setTageStatus", tageStatus)
   };
+
+
+  
   return (
     <Box sx={{ padding: "9px", backgroundColor: "#1E1E1E" }}>
       <ToastContainer />
