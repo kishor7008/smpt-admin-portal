@@ -82,12 +82,13 @@ const SmtpUI = ({ setResult }) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [showTable, setShowTable] = useState(false);
-
+  const [saveRandomNo, setSaveRandomNo] = useState("")
+  const [tageStatus, setTageStatus] = useState(false)
   // Handle hover events for table ... 
   const handleMouseEnter = () => setShowTable(true);
   const handleMouseLeave = () => setShowTable(false);
 
-
+  console.log("tageStatus", tageStatus)
 
   const StyledButton = styled(Button)({
     backgroundColor: "#1e90ff",
@@ -144,6 +145,7 @@ const SmtpUI = ({ setResult }) => {
           receiverContent: renderTemplate(receiver, content),
           // tageData: renderTemplate(receiver, newTags),
           id: receiver.id,
+          // id: saveRandomNo,
           subject: renderTemplate(receiver, subject),
         };
 
@@ -151,6 +153,7 @@ const SmtpUI = ({ setResult }) => {
           // If check is true, add the additional properties
           combined.push({
             ...baseObject,
+
             // receiverContent: renderTemplate(receiver, content),
             receiverAttachment: renderTemplate(receiver, htmlFile), // Corrected typo: "receiverAttachememt" to "receiverAttachment"
             filename: renderTemplate(receiver, fileName),
@@ -162,6 +165,8 @@ const SmtpUI = ({ setResult }) => {
         }
       });
     });
+
+    console.log(saveRandomNo, "combine", combined)
     // console.log(combined, "combined");
     await axios
       .post("http://localhost:3002/send-email", combined)
@@ -200,7 +205,8 @@ const SmtpUI = ({ setResult }) => {
               return acc;
             }, {});
             // Add unique 12-character id to each object
-            rowObject.id = uuidv4().replace(/-/g, "").slice(0, 12);
+            // rowObject.id = uuidv4().replace(/-/g, "").slice(0, 12);
+            rowObject.id = saveRandomNo;
             return rowObject;
           });
           setSmtpReciver(formattedData);
@@ -229,15 +235,19 @@ const SmtpUI = ({ setResult }) => {
   };
 
   const handleAddTag = (data) => {
-    console.log(data, "data from modal")
+    // console.log(data, "data from modal")
     if (data.tagName.trim()) {
       setNewTags([...newTags, data]);
       localStorage.setItem('tags', JSON.stringify([...newTags, data]));
       setOpen(false);
+      setSaveRandomNo(data.randomNumber);
     }
   };
 
-  console.log("newTags", newTags);
+
+
+
+  // console.log("newTags", newTags);
 
   const handleDelete = (tagToDelete) => {
     // Filter out the tag and update localStorage
@@ -253,6 +263,8 @@ const SmtpUI = ({ setResult }) => {
     navigator.clipboard.writeText(formattedTag).then(() => {
       toast.success(`${formattedTag}Copy`);
     });
+
+    console.log("setTageStatus", tageStatus)
   };
   return (
     <Box sx={{ padding: "9px", backgroundColor: "#1E1E1E" }}>
@@ -606,7 +618,7 @@ const SmtpUI = ({ setResult }) => {
 
             {open ? <>
               <ModaleStyle>
-                <ModalContainer open={open} handleAddTagData={handleAddTag} setOpen={setOpen} style={{ width: "300px", height: "200px", display: "flex", justifyContent: "center", alignItems: "center" }} />
+                <ModalContainer setTageStatus={setTageStatus} open={open} handleAddTagData={handleAddTag} setOpen={setOpen} style={{ width: "300px", height: "200px", display: "flex", justifyContent: "center", alignItems: "center" }} />
               </ModaleStyle>
             </> : ""}
             {/* {isTagInputVisible && (

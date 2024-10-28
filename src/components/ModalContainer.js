@@ -20,7 +20,7 @@ const style = {
     p: 4,
 };
 
-const ModalContainer = ({ open, setOpen, handleAddTagData }) => {
+const ModalContainer = ({ open, setTageStatus, setOpen, handleAddTagData }) => {
 
     const handleClose = () => setOpen(false);
     // States for the checkboxes and length
@@ -70,7 +70,7 @@ const ModalContainer = ({ open, setOpen, handleAddTagData }) => {
     };
 
     useEffect(() => {
-        generateRandomTag()
+        // generateRandomTag()
     }, [lettersUpper, lettersLower, numbers, length]);
 
     console.log("randomNumber", randomNumber)
@@ -87,7 +87,8 @@ const ModalContainer = ({ open, setOpen, handleAddTagData }) => {
             numbers,
             randomNumber
         };
-
+        
+        setTageStatus(true)
         console.log("Generated Tag Options:", options);
         // Add logic to handle the generated tag based on selected inputs.
         handleAddTagData(options)
