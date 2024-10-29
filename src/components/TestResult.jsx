@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Box, Button, Typography, Select, MenuItem } from "@mui/material";
+import {
+  Box,
+  Button,
+  Typography,
+  Select,
+  MenuItem,
+  TextField,
+} from "@mui/material";
 import { styled } from "@mui/system";
 import Images from "./../assets/images/index";
 import axios from "axios";
@@ -61,38 +68,54 @@ const StyledButton = styled(Button)({
   },
 });
 
-const ServerStatus = ({result}) => {
+const ServerStatus = ({ result }) => {
   const [runningIp, setRunningIp] = useState(null); // Initialize with a default value
-
-const fetchData = async (url, params = {}) => {
-  try {
-    const response = await axios.get(url, { params });
-    return response.data; // Return the data from the response
-  } catch (error) {
-    console.error('Error fetching data:', error);
-    throw error; // Rethrow the error for further handling
-  }
-};
-
-useEffect(() => {
-  const fetchIps = async () => {
+  const [newConnection, setNewConnection] = useState(2); // Initialize with a default value
+  const [refreshIp, setRefreshIp] = useState(); // Initialize with a default value
+  console.log(result, "result");
+  const fetchData = async (url, params = {}) => {
     try {
-      const getIps = `${API_URL}ec2/ips?instanceId=i-0b95c95664e6b9cd6`;
-      const responseIps = await fetchData(getIps);
-      console.log(responseIps, "responseIps");
-      setRunningIp(responseIps); // Update the state with the fetched IPs
+      const response = await axios.get(url, { params });
+      return response.data; // Return the data from the response
     } catch (error) {
-      console.error('Error fetching IPs:', error);
-      // Handle error as needed (e.g., set an error state)
+      console.error("Error fetching data:", error);
+      throw error; // Rethrow the error for further handling
     }
   };
 
-  fetchIps(); // Call the inner async function
-}, []);
+  useEffect(() => {
+    const fetchIps = async () => {
+      try {
+        const getIps = `${API_URL}ec2/ips?instanceId=i-0b95c95664e6b9cd6`;
+        const responseIps = await fetchData(getIps);
+        setRunningIp(responseIps);
+        setRefreshIp(responseIps?.newIps?.[0]?.PublicIp); // Update the state with the fetched IPs
+      } catch (error) {
+        console.error("Error fetching IPs:", error);
+        // Handle error as needed (e.g., set an error state)
+      }
+    };
+
+    fetchIps(); // Call the inner async function
+  }, []);
+
+  const getNewConnection = async () => {
+    const getNewConnection = `${API_URL}ec2/refresh-ips/${newConnection}`;
+    await axios.post(getNewConnection);
+    const getIps = `${API_URL}ec2/ips?instanceId=i-0b95c95664e6b9cd6`;
+    const responseIps = await fetchData(getIps);
+    setRunningIp(responseIps);
+    setRefreshIp(responseIps?.newIps?.[0]?.PublicIp); // Update the state with the fetched IPs
+  };
+
+  const GetRefreshIp = async () => {
+    const refreshIp = `${API_URL}ec2/refresh-ip/i-0b95c95664e6b9cd6`;
+    const responseIps = await axios.post(refreshIp);
+    setRefreshIp(responseIps?.data?.newPublicIp); // Update the state with the fetched IPs
+  };
   return (
     <Container>
-      <Typography variant="h6" gutterBottom>
-      </Typography>
+      <Typography variant="h6" gutterBottom></Typography>
       <InfoBox>
         <Select
           defaultValue="pay"
@@ -138,7 +161,9 @@ useEffect(() => {
             <td>Expires</td>
             <td>
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Typography variant="body1">{runningIp?.newIps?.length}</Typography>
+                <Typography variant="body1">
+                  {runningIp?.newIps?.length}
+                </Typography>
                 <img
                   src={Images.DeleteIcon}
                   alt="cart icon"
@@ -150,8 +175,19 @@ useEffect(() => {
           </tr>
         </table>
       </TableContainer>
+      <TextField
+        error
+        id="outlined-error"
+        defaultValue="Hello World"
+        value={refreshIp}
+        sx={{
+          input: { color: "white" }, // Targets the input text color
+        }}
+      />
 
-      <StyledButton variant="contained">Get New Server</StyledButton>
+      <StyledButton variant="contained" onClick={() => GetRefreshIp()}>
+        Refresh IP
+      </StyledButton>
       <Box style={{ height: "12vh" }}></Box>
 
       <StatusContainer>
@@ -164,23 +200,20 @@ useEffect(() => {
         <StatusItem>
           <Typography variant="subtitle1">Failed</Typography>
           <Typography variant="h4" className="failed">
-          {result.totalSenderFailed}
-
+            {result.totalSenderFailed}
           </Typography>
           <Typography>Get log</Typography>
         </StatusItem>
         <StatusItem>
           <Typography variant="subtitle1">Sent</Typography>
           <Typography variant="h4" className="sent">
-          {result.totalReceiver}
-
+            {result.totalReceiver}
           </Typography>
         </StatusItem>
         <StatusItem>
           <Typography variant="subtitle1">Failed</Typography>
           <Typography variant="h4" className="failed">
-          {result.totalReceiverFailed}
-
+            {result.totalReceiverFailed}
           </Typography>
           <Typography>Get log</Typography>
         </StatusItem>
@@ -219,10 +252,7 @@ useEffect(() => {
               justifyContent: "center",
             }}
           >
-            <Typography variant="body1">
-          {result.totalTime}
-
-            </Typography>
+            <Typography variant="body1">{result.totalTime}</Typography>
             <img
               src={Images.TImerIcon}
               alt="cart icon"
@@ -244,7 +274,7 @@ useEffect(() => {
             textAlign: "center",
           }}
         >
-          Delay in (ms)
+          Connection
         </Box>
         <Box
           sx={{
@@ -265,16 +295,29 @@ useEffect(() => {
               justifyContent: "center",
             }}
           >
-            <Typography variant="body1">1</Typography>
-            <img
-              src={Images.ConnectionIcon}
-              alt="cart icon"
-              width={20}
-              height={20}
-            />
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <input
+                type="number"
+                min={1}
+                max={10}
+                defaultValue={1}
+                style={{ width: "50px" }}
+                value={newConnection}
+                onChange={(e) => setNewConnection(e.target.value)}
+              />
+              <img
+                src={Images.ConnectionIcon}
+                alt="cart icon"
+                width={20}
+                height={20}
+              />
+            </div>
           </Box>
         </Box>
       </Box>
+      <StyledButton variant="contained" onClick={() => getNewConnection()}>
+        Get New Server
+      </StyledButton>
     </Container>
   );
 };

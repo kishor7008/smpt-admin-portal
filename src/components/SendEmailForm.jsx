@@ -157,7 +157,7 @@ const SmtpUI = ({ setResult }) => {
       .then((response) => {
         // Handle success
         console.log(response,"response")
-        setResult(response.data);
+        setResult(response?.data?.data);
         setSmtpReciver([]);
         setSmtpSender([]);
         setSenderName("");
