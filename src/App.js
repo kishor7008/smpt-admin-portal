@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
-export const API_URL='http://52.66.253.104/'
+export const API_URL='http://localhost:/3002'
 export default function App() {
   return (
     <BrowserRouter>
