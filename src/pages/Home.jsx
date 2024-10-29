@@ -4,13 +4,15 @@ import SendEmailForm from '../components/SendEmailForm';
 
 export default function Home() {
   const [result, setResult] = useState({
-    message: "Emails sent",
-    totalSenders: 0,
-    senderFailures: 0,
-    totalReceivers: 0,
-    receiverFailures: 0,
-    responseTime: "0.00 seconds",
+      "totalSender": 0,
+      "totalReceiver": 0,
+      "totalReceiverFailed": 0,
+      "totalSenderFailed": 0,
+      "failedReasons": [],
+      "totalTime": 0.0
+  
   });
+  console.log(result,"rsult");
   return (
     
     <div className="container">

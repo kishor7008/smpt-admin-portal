@@ -1,6 +1,5 @@
 import { Box } from "@mui/material";
-import React, { useState } from "react";
-import ReactQuill from "react-quill";
+import React from "react";
 import "react-quill/dist/quill.snow.css";
 import Images from "../assets/images";
 
@@ -72,7 +71,7 @@ const TextEditor = ({ content, setContent, htmlFile, setHtmlFile, setChecked, ch
           <textarea
             value={content} // Use content for the rich text editor state
             onChange={handleEditorTextChange}
-            style={{ height: "100%", width: "100%", backgroundColor: "#333" }}
+            style={{ height: "100%", width: "100%", backgroundColor: "white" }}
           />
         </div>
       </div>

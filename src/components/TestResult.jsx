@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Button, Typography, Select, MenuItem } from "@mui/material";
 import { styled } from "@mui/system";
 import Images from "./../assets/images/index";
+import axios from "axios";
+import { API_URL } from "../App";
 
 // Styled Components similar to SmtpUI
 const Container = styled(Box)({
@@ -60,13 +62,37 @@ const StyledButton = styled(Button)({
 });
 
 const ServerStatus = ({result}) => {
-  
+  const [runningIp, setRunningIp] = useState(null); // Initialize with a default value
+
+const fetchData = async (url, params = {}) => {
+  try {
+    const response = await axios.get(url, { params });
+    return response.data; // Return the data from the response
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    throw error; // Rethrow the error for further handling
+  }
+};
+
+useEffect(() => {
+  const fetchIps = async () => {
+    try {
+      const getIps = `${API_URL}ec2/ips?instanceId=i-0b95c95664e6b9cd6`;
+      const responseIps = await fetchData(getIps);
+      console.log(responseIps, "responseIps");
+      setRunningIp(responseIps); // Update the state with the fetched IPs
+    } catch (error) {
+      console.error('Error fetching IPs:', error);
+      // Handle error as needed (e.g., set an error state)
+    }
+  };
+
+  fetchIps(); // Call the inner async function
+}, []);
   return (
     <Container>
       <Typography variant="h6" gutterBottom>
-        {/* My Mail */}
       </Typography>
-
       <InfoBox>
         <Select
           defaultValue="pay"
@@ -102,7 +128,7 @@ const ServerStatus = ({result}) => {
         <table>
           <tr>
             <td>IP</td>
-            <td>18.123.342</td>
+            <td>{runningIp?.newIps?.[0]?.PublicIp}</td>
           </tr>
           <tr>
             <td>Status</td>
@@ -112,7 +138,7 @@ const ServerStatus = ({result}) => {
             <td>Expires</td>
             <td>
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Typography variant="body1">1</Typography>
+                <Typography variant="body1">{runningIp?.newIps?.length}</Typography>
                 <img
                   src={Images.DeleteIcon}
                   alt="cart icon"
@@ -132,13 +158,13 @@ const ServerStatus = ({result}) => {
         <StatusItem>
           <Typography variant="subtitle1">Smtps</Typography>
           <Typography variant="h4" className="smtps">
-            {result.totalSenders}
+            {result.totalSender}
           </Typography>
         </StatusItem>
         <StatusItem>
           <Typography variant="subtitle1">Failed</Typography>
           <Typography variant="h4" className="failed">
-          {result.senderFailures}
+          {result.totalSenderFailed}
 
           </Typography>
           <Typography>Get log</Typography>
@@ -146,14 +172,14 @@ const ServerStatus = ({result}) => {
         <StatusItem>
           <Typography variant="subtitle1">Sent</Typography>
           <Typography variant="h4" className="sent">
-          {result.totalReceivers}
+          {result.totalReceiver}
 
           </Typography>
         </StatusItem>
         <StatusItem>
           <Typography variant="subtitle1">Failed</Typography>
           <Typography variant="h4" className="failed">
-          {result.receiverFailures}
+          {result.totalReceiverFailed}
 
           </Typography>
           <Typography>Get log</Typography>
@@ -194,7 +220,7 @@ const ServerStatus = ({result}) => {
             }}
           >
             <Typography variant="body1">
-          {result.responseTime}
+          {result.totalTime}
 
             </Typography>
             <img

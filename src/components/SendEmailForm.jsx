@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {  useRef, useState } from "react";
 import Papa from "papaparse"; // Import PapaParse
 import "../App.css";
 import {
@@ -15,16 +15,12 @@ import {
 import { styled } from "@mui/system";
 import TextEditor from "./TextEditor";
 import Images from "../assets/images";
-import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
-import ReactQuill from 'react-quill'; // For HTML editor
-import 'react-quill/dist/quill.snow.css';
+import "react-quill/dist/quill.snow.css";
 import { toast, ToastContainer } from "react-toastify";
-// Container styles
 import "react-toastify/dist/ReactToastify.css";
 import ModalContainer from "./ModalContainer";
-import { generateRandomString, transformArrayToObject } from "../utils/func";
-// import CustomTagForm from "./CustomTagForm";
+import { API_URL } from "../App";
 
 const Container = styled(Box)({
   display: "flex",
@@ -59,21 +55,19 @@ const RemoveButton = styled(Button)({
 
 const ModaleStyle = styled(Box)({
   width: "300px",
-  height: "200px"
-})
-
+  height: "200px",
+});
 
 const SmtpUI = ({ setResult }) => {
-  const dataFromLocal = JSON.parse(localStorage.getItem("tags")) || []
   const [smtpReciver, setSmtpReciver] = useState([]);
   const [smtpSender, setSmtpSender] = useState([]);
-  const [tags, setTags] = useState(["email", "name", "content"]);
-  const [newTags, setNewTags] = useState(JSON.parse(localStorage.getItem("tags")));
+  const [tags, setTags] = useState(["email", "name", "content","c4","c5","c6"]);
+  const [newTags, setNewTags] = useState(
+    JSON.parse(localStorage.getItem("tags") || "[]")
+  );
   const [isTagInputVisible, setIsTagInputVisible] = useState(false); // State for showing/hiding input field
-  const [newTag, setNewTag] = useState(""); // State for new tag input
-  const auth = ["email", "pass"];
   const [typeServices, setTypeServices] = useState("GMAIL");
-  const [fileType, setFileType] = useState("Pdf");
+  const [fileType, setFileType] = useState("pdf");
   const [senderName, setSenderName] = useState("");
   const [subject, setSubject] = useState("");
   const [fileName, setFileName] = useState("");
@@ -83,14 +77,14 @@ const SmtpUI = ({ setResult }) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [showTable, setShowTable] = useState(false);
-  const [saveRandomNo, setSaveRandomNo] = useState("")
-  const [tageStatus, setTageStatus] = useState(false)
-  // Handle hover events for table ... 
+  const [tageStatus, setTageStatus] = useState(false);
   const handleMouseEnter = () => setShowTable(true);
   const handleMouseLeave = () => setShowTable(false);
-
-  console.log("tageStatus", tageStatus)
-
+  const [senderCsv, setSenderCsv] = useState();
+  const [receiverCsv, setReceierCsv] = useState();
+  const auth=["email","pass"]
+  const fileInputRef = useRef(null);
+  const fileInputRefOne = useRef(null);
   const StyledButton = styled(Button)({
     backgroundColor: "#1e90ff",
     color: "#fff",
@@ -104,10 +98,6 @@ const SmtpUI = ({ setResult }) => {
     fontWeight: "bold",
     fontSize: "19px",
   });
-  function renderTemplate(obj, htmlString) {
-    return htmlString.replace(/\{\{(\w+)\}\}/g, (match, key) => obj[key] || "");
-
-  }
   const validateInputs = () => {
     if (!smtpSender.length) {
       toast.error("Please upload an SMTP file.");
@@ -131,52 +121,42 @@ const SmtpUI = ({ setResult }) => {
     }
     return true;
   };
+  const handleRemove = () => {
+    setSmtpSender([]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''; // Reset the file input value
+    }
+  };
+  const handleRemoveOne = () => {
+    setSmtpReciver([]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''; // Reset the file input value
+    }
+  };
   const handelSubmit = async () => {
-    const updatedReceivers = smtpReciver.map((item) => ({
-      ...item,
-      ...transformArrayToObject(newTags)
-    }));
-    console.log(updatedReceivers,"updatedReceivers")
     if (!validateInputs()) return;
-    setLoading(true)
-    let combined = [];
-    smtpSender.forEach((sender) => {
-      updatedReceivers.forEach((receiver) => {
-        const baseObject = {
-          senderEmail: sender.email,
-          senderPassword: sender.pass,
-          receiverEmail: receiver.email,
-          senderName: renderTemplate(receiver, senderName),
-          receiverContent: renderTemplate(receiver, content),
-          // tageData: renderTemplate(receiver, newTags),
-          id: receiver.id,
-          // id: saveRandomNo,
-          subject: renderTemplate(receiver, subject),
-        };
-
-        if (check) {
-          // If check is true, add the additional properties
-          combined.push({
-            ...baseObject,
-
-            // receiverContent: renderTemplate(receiver, content),
-            receiverAttachment: renderTemplate(receiver, htmlFile), // Corrected typo: "receiverAttachememt" to "receiverAttachment"
-            filename: renderTemplate(receiver, fileName),
-            fileType: fileType,
-          });
-        } else {
-          // If check is false, push the base object
-          combined.push(baseObject);
-        }
-      });
-    });
-
-    console.log(saveRandomNo, "combine", combined)
-    console.log(combined, "combined");
+    setLoading(true);
+    const htmlContent = content;
+    const htmlAttachment = htmlFile;
+    const blobContent = new Blob([htmlContent], { type: "text/html" });
+    const blobAttachment = new Blob([htmlAttachment], { type: "text/html" });
+    let fdata = new FormData();
+    fdata.append("receiverCsv", receiverCsv);
+    fdata.append("senderCsv", senderCsv);
+    fdata.append("subject", subject);
+    fdata.append("senderName", senderName);
+    fdata.append("content", blobContent, "content.html");
+    if (check) {
+      fdata.append("htmlFile", blobAttachment, "htmlFile.html");
+      fdata.append("fileType", fileType);
+      fdata.append("fileName", fileName);
+    }
+    fdata.append("newTags", JSON.stringify(newTags));
     await axios
-      .post("http://localhost:3002/send-email", combined)
+      .post(`${API_URL}send-email`, fdata)
       .then((response) => {
         // Handle success
+        console.log(response,"response")
         setResult(response.data);
         setSmtpReciver([]);
         setSmtpSender([]);
@@ -185,33 +165,28 @@ const SmtpUI = ({ setResult }) => {
         setFileName("");
         setContent("");
         setHtmlFile("");
-        setLoading(false)
+        setLoading(false);
       })
       .catch((error) => {
-        setLoading(false)
+        setLoading(false);
         console.error("Error:", error);
       });
-
   };
-
-  // console.log("content", content)
 
   const handelRecipients = (event) => {
     const file = event.target.files[0];
+    console.log(file,"file")
+    setReceierCsv(file);
     if (file) {
       Papa.parse(file, {
         header: false, // Manually mapping headers
         skipEmptyLines: true,
         complete: (result) => {
           const formattedData = result.data.map((row) => {
-            // Create an object where keys are from the tags array
             const rowObject = row.reduce((acc, value, index) => {
               acc[`${tags[index]}`] = value; // Maps the value to the corresponding tag
               return acc;
             }, {});
-            // Add unique 12-character id to each object
-            // rowObject.id = uuidv4().replace(/-/g, "").slice(0, 12);
-            rowObject.id = saveRandomNo;
             return rowObject;
           });
           setSmtpReciver(formattedData);
@@ -222,6 +197,7 @@ const SmtpUI = ({ setResult }) => {
 
   const handelSmtpCsv = (event) => {
     const file = event.target.files[0];
+    setSenderCsv(file)
     if (file) {
       Papa.parse(file, {
         header: false,
@@ -240,49 +216,38 @@ const SmtpUI = ({ setResult }) => {
   };
 
   const handleAddTag = (data) => {
-    // console.log(data, "data from modal")
+  console.log(data,"newTags");
     if (data.tagName.trim()) {
       setNewTags([...newTags, data]);
-      localStorage.setItem('tags', JSON.stringify([...newTags, data]));
+      localStorage.setItem("tags", JSON.stringify([...newTags, data]));
       setOpen(false);
-      setSaveRandomNo(data.randomNumber);
     }
   };
   const handleDelete = (tagToDelete) => {
-    // Filter out the tag and update localStorage
     const updatedTags = newTags.filter((tag) => tag.tagName !== tagToDelete);
     setNewTags(updatedTags);
     localStorage.setItem("tags", JSON.stringify(updatedTags));
   };
 
-
   const handleTagClick = (tag) => {
-    // Copy tag text to clipboard
-    const formattedTag = `{{${tag}}}`;
+    const formattedTag = `{{${tag}}} `;
     navigator.clipboard.writeText(formattedTag).then(() => {
       toast.success(`${formattedTag}Copy`);
     });
-
-    console.log("setTageStatus", tageStatus)
   };
 
-
-  
   return (
     <Box sx={{ padding: "9px", backgroundColor: "#1E1E1E" }}>
       <ToastContainer />
-      {/* <CustomTagForm /> */}
       <Box sx={{ display: "flex" }}>
         <Box sx={{ width: "70%", marginRight: "10px" }}>
           <Container sx={{ marginBottom: "10px", gap: 0 }}>
-            {/* First Row */}
             <Row>
               <Box fontWeight="bold">Recipients</Box>
             </Row>
-
-            {/* File Upload Row */}
-            <Row >
-              <div className="input-container"
+            <Row>
+              <div
+                className="input-container"
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
                 style={{ position: "relative" }}
@@ -294,17 +259,18 @@ const SmtpUI = ({ setResult }) => {
                   style={{ display: "none" }}
                   className="hover-input"
                   id="csv-upload" // Hidden input for file upload
+                  ref={fileInputRefOne}
                 />
 
-                <label htmlFor="csv-upload"
-                >
+                <label htmlFor="csv-upload">
                   <CsvButton variant="text" component="span">
                     Select CSV
                   </CsvButton>
                 </label>
                 {/* table  */}
                 {/* {smtpReciver.length > 0 && showTable && ( */}
-                <table className="hover-table"
+                <table
+                  className="hover-table"
                   style={{
                     position: "absolute", // Make table absolutely positioned
                     top: "70%", // Position it just outside the container
@@ -319,29 +285,34 @@ const SmtpUI = ({ setResult }) => {
                       <th>Email</th>
                       <th>Name</th>
                       <th>Content</th>
+                      <th>c4</th>
+                      <th>c5</th>
+                      <th>c6</th>
                     </tr>
                   </thead>
 
-                  {smtpReciver.length > 0 && showTable ?
+                  {smtpReciver.length > 0 && showTable ? (
                     <tbody>
                       {smtpReciver.map((e) => (
                         <tr>
                           <td>{e.email}</td>
                           <td>{e.name}</td>
                           <td>{e.content}</td>
+                          <td>{e.c4}</td>
+                          <td>{e.c5}</td>
+                          <td>{e.c6}</td>
                         </tr>
                       ))}
                     </tbody>
-                    :
+                  ) : (
                     <tbody>
-
                       <tr>
                         <td>NO</td>
                         <td>Data</td>
                         <td>Found</td>
                       </tr>
-
-                    </tbody>}
+                    </tbody>
+                  )}
                 </table>
                 {/* )} */}
               </div>
@@ -353,7 +324,7 @@ const SmtpUI = ({ setResult }) => {
                 <RemoveButton
                   variant="contained"
                   size="small"
-                  onClick={() => setSmtpReciver([])}
+                  onClick={handleRemoveOne}
                 >
                   <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                     <Typography variant="subtitle">Remove</Typography>
@@ -400,6 +371,7 @@ const SmtpUI = ({ setResult }) => {
                   onChange={handelSmtpCsv}
                   style={{ display: "none" }}
                   id="smtp-upload" // Hidden input for file upload
+                  ref={fileInputRef}
                 />
                 <label htmlFor="smtp-upload">
                   <CsvButton variant="text" component="span">
@@ -414,7 +386,7 @@ const SmtpUI = ({ setResult }) => {
                   <RemoveButton
                     variant="contained"
                     size="small"
-                    onClick={() => setSmtpSender([])}
+                    onClick={handleRemove}
                   >
                     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                       <Typography variant="subtitle">Remove</Typography>
@@ -533,11 +505,12 @@ const SmtpUI = ({ setResult }) => {
               scrollbarWidth: "none",
             }}
           >
-            {tags.map((tag, index) => (
+            {tags?.map((tag, index) => (
               <Chip
                 key={index}
                 label={tag}
                 variant="outlined"
+                onClick={() => handleTagClick(tag)}
                 sx={{
                   borderRadius: "5px",
                   fontSize: "12px",
@@ -545,92 +518,61 @@ const SmtpUI = ({ setResult }) => {
                   color: "#FFFFFF",
                 }}
               />
-
-
             ))}
 
-
-
-            {newTags.length > 0 ? <>
-              {newTags.map((tag, index) => (
-                //   <Chip
-                //     key={index}
-                //     label={tag.tagName}
-                //     variant="outlined"
-                //     sx={{
-                //       borderRadius: "5px",
-                //       fontSize: "12px",
-                //       borderColor: "#00BFFF",
-                //       color: "#FFFFFF",
-                //     }}
-                //   />
-                // ))}
-
-
-                <Chip
-                  key={index}
-                  label={tag.tagName}
-                  variant="outlined"
-                  onDelete={() => handleDelete(tag.tagName)}
-                  onClick={() => handleTagClick(tag.tagName)}
-                  sx={{
-                    borderRadius: "5px",
-                    fontSize: "12px",
-                    borderColor: "#00BFFF",
-                    color: "#FFFFFF",
-                    cursor: "pointer",
-                  }}
-                />
-              ))}
-
-            </>
-              : ""}
-
-
-
-            {/* Add Tag Input */}
-            {/* {isTagInputVisible && (
-              <TextField
-                size="small"
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                placeholder="New Tag"
-                sx={{
-                  input: { color: "#fff" },
-                  backgroundColor: "#333",
-                  borderRadius: "5px",
-                  height: "35px",
-                  width: "120px",
-                }}
-              />
-            )} */}
-
-
-
-            {/* Add Tag and Save Button */}
+            {newTags?.length > 0 ? (
+              <>
+                {newTags?.map((tag, index) => (
+                  <Chip
+                    key={index}
+                    label={tag.tagName}
+                    variant="outlined"
+                    onDelete={() => handleDelete(tag.tagName)}
+                    onClick={() => handleTagClick(tag.tagName)}
+                    sx={{
+                      borderRadius: "5px",
+                      fontSize: "12px",
+                      borderColor: "#00BFFF",
+                      color: "#FFFFFF",
+                      cursor: "pointer",
+                    }}
+                  />
+                ))}
+              </>
+            ) : (
+              ""
+            )}
             <Button
               onClick={() => {
-                setIsTagInputVisible(true)
-                setOpen(true)
+                setIsTagInputVisible(true);
+                setOpen(true);
               }}
               sx={{ color: "#00BFFF", textTransform: "none" }}
             >
               {open ? "" : "Add Tags+"}
             </Button>
 
-            {open ? <>
-              <ModaleStyle>
-                <ModalContainer setTageStatus={setTageStatus} open={open} handleAddTagData={handleAddTag} setOpen={setOpen} style={{ width: "300px", height: "200px", display: "flex", justifyContent: "center", alignItems: "center" }} />
-              </ModaleStyle>
-            </> : ""}
-            {/* {isTagInputVisible && (
-              <Button
-                onClick={handleAddTag}
-                sx={{ color: "#00BFFF", textTransform: "none" }}
-              >
-                Save
-              </Button>
-            )} */}
+            {open ? (
+              <>
+                <ModaleStyle>
+                  <ModalContainer
+                    setTageStatus={setTageStatus}
+                    open={open}
+                    handleAddTagData={handleAddTag}
+                    setOpen={setOpen}
+                    style={{
+                      width: "300px",
+                      height: "200px",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  />
+                </ModaleStyle>
+              </>
+            ) : (
+              ""
+            )}
           </Box>
         </Box>
       </Box>
@@ -711,8 +653,8 @@ const SmtpUI = ({ setResult }) => {
               height: "35px",
             }}
           >
-            <MenuItem value="Image">Image</MenuItem>
-            <MenuItem value="Pdf">Pdf</MenuItem>
+            <MenuItem value="image">Image</MenuItem>
+            <MenuItem value="pdf">Pdf</MenuItem>
           </Select>
         </Box>
         <Box
@@ -725,16 +667,13 @@ const SmtpUI = ({ setResult }) => {
           <StyledButton
             variant="contained"
             onClick={handelSubmit}
-            disabled={loading}
+            // disabled={loading}
           >
             {loading ? (
-              <CircularProgress
-                size={24}
-                className="loading-spinner"
-              />
+            <CircularProgress size={24} className="loading-spinner" />
             ) : (
-              'Send Email'
-            )}
+            "Send Email"
+             )} 
           </StyledButton>
         </Box>
       </Box>

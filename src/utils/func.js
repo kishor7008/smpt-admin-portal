@@ -1,4 +1,5 @@
 export function generateRandomString({ length, lettersLower, lettersUpper, numbers }) {
+    console.log(numbers,"numbers")
     const lowerChars = "abcdefghijklmnopqrstuvwxyz";
     const upperChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const numberChars = "0123456789";
@@ -27,7 +28,7 @@ export function generateRandomString({ length, lettersLower, lettersUpper, numbe
  export function transformArrayToObject(array) {
     return array.reduce((acc, item) => {
       const { tagName, ...rest } = item;
-      acc[tagName] =generateRandomString(rest); 
+      acc[tagName] =rest; 
       return acc;
     }, {});
   }
